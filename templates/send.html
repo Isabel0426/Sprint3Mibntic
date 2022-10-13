@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+    <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+</head>
+<body>
+    <section class="content">
+        {% for message in get_flashed_messages() %}
+        <div class="flash">{{ message }}</div>
+        {% endfor %}
+    </section>
+    <center>
+        <h1>Enviar mensaje</h1>
+        <form name="SendForm" method="post" action="{{ url_for('send') }}">
+            <div>
+                <label for="receiver"> Para:</label>
+                <input type="text" name="receiver" id="receiver" />
+            </div>
+            <div>
+                <label for="asunto">Asunto</label>
+                <input type="text" name="asunto" id="asunto" />
+            </div>
+            <div>
+                <label for="mensaje">Mensaje</label>
+                <br>
+                <!-- <input type="textarea" name="mensaje" id="mensaje" cols="40" rows="5"
+                style="width : 200px; height : 50px"/> -->
+                <textarea name="mensaje" id="mensaje" value="" cols="40" rows="5"></textarea>>
+            </div>
+            <input type="submit" value="Send" />
+        </form>
+        <br>
+        <!-- FIXME: solve message displaying issue  -->
+        <div>
+            <label for="enviado" style="visibility: hidden"> Mensajes enviados</label visibility=off>
+            <br>
+            <textarea name="enviado" id="enviado" value="" cols="40" rows="5" style="visibility: hidden">
+        </div>
+    </center>
+</body>
+</html>
