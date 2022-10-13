@@ -1,67 +1,143 @@
-from flask import Flask,render_template,request,redirect,url_for,flash
-import sqlite3 as sql
+import os
 
-app=Flask(__name__)
-app.secret_key='admin123'
+import yagmail as yagmail
+from flask import Flask, render_template, flash, request, redirect, url_for, jsonify
+import utils
+import yagmail
+from db import close_db, get_db
+from formulario import Contactenos
+from code import create_validation_code, get_last_code, reset_code
+from werkzeug.security import generate_password_hash, check_password_hash
+app = Flask( __name__ )
+app.secret_key = os.urandom( 24 )
 
-@app.route('/')
-@app.route('/index')
+
+@app.route( '/' )
 def index():
-    con=sql.connect('db_web.db')
-    con.row_factory=sql.Row
-    cur=con.cursor()
-    cur.execute('select * from users')
-    data=cur.fetchall()
-    return render_template('index.html',datas=data)
+    return render_template( 'login.html' )
 
 
-@app.route('/add_user',methods=['GET','POST'])
-def add_user():
-    if request.method=='POST':
-        uname=request.form['uname']
-        contact=request.form['contact']
-        con=sql.connect('db_web.db')
-        cur=con.cursor()
-        cur.execute('insert into users(UNAME,CONTACT) values (?,?)',(uname,contact))
-        con.commit()
-        flash('Usuario Guardado','success')
-        return redirect(url_for('index'))
-    return render_template('add_user.html')
+@app.route( '/register', methods=('GET', 'POST') )
+def register():
+    try:
+        if request.method == 'POST':
+
+            name= request.form['nombre']
+            username = request.form['username']
+            password = request.form['password']
+            email = request.form['correo']
+            error = None
+            db = get_db()
+
+            if not utils.isUsernameValid( username ):
+                error = "El usuario debe ser alfanumerico o incluir solo '.','_','-'"
+                flash( error )
+                return render_template( 'register.html' )
+
+            if not utils.isPasswordValid( password ):
+                error = 'La contraseña debe contenir al menos una minúscula, una mayúscula, un número, un caracter especial y 8 caracteres'
+                flash( error )
+                return render_template( 'register.html' )
+
+            if not utils.isEmailValid( email ):
+                error = 'Correo invalido'
+                flash( error )
+                return render_template( 'register.html' )
+
+            if db.execute( 'SELECT * FROM usuario WHERE usuario = ?', (username,) ).fetchone() is not None:
+                error = 'El usuario {} ya existe'.format( username )
+                flash( error )
+                return render_template( 'register.html' )
+
+            # FIXME Solve hash checking on logging method and hash should be separated
+            # hash = generate_password_hash(password)
+
+            db.executescript(
+                "INSERT INTO usuario (nombre, usuario, correo, contraseña) VALUES ('%s','%s','%s','%s')" % (name, username, email, password)
+            )
+            db.commit()
+
+            close_db()
+
+            sent_code = create_validation_code()
+            correo_electronico=yagmail.SMTP('floresy@uninorte.edu.co','cocodruLLo45') #correo electronico es la variable que almacena el correo y la contraseña
+            correo_electronico.send(
+                to=email,
+                subject='Plataforma de mensajeria: Validación de correo',
+                contents='Este es su código de verificación para {}: {}'.format(username, sent_code)
+            )
+            return redirect( 'validation' )
+        return render_template( 'register.html' )
+    except:
+        flash('Puede que requiera revisar el correo de remitente')
+        return render_template( 'error.html' )
 
 
-@app.route('/edit_user/<string:uid>',methods=['GET','POST'])
-def edit_user(uid):
-    if request.method=='POST':
-        uname=request.form['uname']
-        contact=request.form['contact']
-        con=sql.connect('db_web.db')
-        cur=con.cursor()
-        cur.execute('update users set UNAME=?, CONTACT=? where UID=?',(uname,contact,uid))
-        con.commit()
-        flash('Usuario Actualizado','success')
-        return redirect(url_for('index'))
+@app.route( '/login', methods=('GET', 'POST') )
+def login():
+    try:
+        if request.method == 'POST':
+            db = get_db()
+            error = None
+            username = request.form['username']
+            password = request.form['password']
+
+            if not username:
+                error = 'Debes ingresar el usuario'
+                flash( error )
+                return render_template( 'login.html' )
+
+            if not password:
+                error = 'Contraseña requerida'
+                flash( error )
+                return render_template( 'login.html' )
+
+            user = db.execute(
+                'SELECT * FROM usuario WHERE usuario = ? AND contraseña = ? ', (username, password)
+            ).fetchone()
+
+            close_db()
+
+            if user is None:
+                error = 'Usuario o contraseña inválidos'
+            else:
+                return redirect( 'send' )
+            flash( error )
+            return render_template( 'login.html' )
+
+        return render_template( 'login.html' )
+    except:
+        return render_template( 'login.html' )
+
+@app.route( '/send', methods=('GET', 'POST'))
+def send():
+    try:
+       if request.method == 'POST':
+            receiver = request.form['receiver']
+            asunto   = request.form['asunto']
+            mensaje  = request.form['mensaje']
+
+            flash('Mensaje fue enviado a <{}> con asunto <{}> y cuerpo: {}' .format(receiver, asunto, mensaje))
+    except:
+        flash("Sending fail")
     
-    con=sql.connect('db_web.db')
-    con.row_factory=sql.Row
-    cur=con.cursor()
-    cur.execute('select * from users where UID=?',(uid))
-    data=cur.fetchone()
-    return render_template('edit_user.html',datas=data)
+    return render_template('send.html')
 
+@app.route( '/validation', methods=('GET', 'POST'))
+def validation():
+    flash( 'Revisa tu correo para activar tu cuenta' )
+    try:
+       if request.method == 'POST':
+            code = request.form['code']
+            sent_code = get_last_code()
+            if(code == sent_code):
+                reset_code()
+                return redirect('login')
+            return render_template('validation.html')    
+    except:
+        return render_template('validation.html')
 
+    return render_template('validation.html')    
 
-@app.route('/delete_user/<string:uid>',methods=['GET'])
-def delete_user(uid):
-    con=sql.connect('db_web.db')
-    cur=con.cursor()
-    cur.execute('delete from users where UID=?',(uid))
-    con.commit()
-    flash('Usuario Eliminado','warning')
-    return redirect(url_for('index'))
-
-
-
-
-
-if __name__=='__main__':
-    app.run(debug=True)
+if __name__ == '__main__':
+    app.run()
