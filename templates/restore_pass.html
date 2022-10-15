@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Recuperar contraseña</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+    <style>
+        img {
+            height: 1em;
+        }
+    </style>
+</head>
+
+<body>
+    <section class="content">
+        {% for message in get_flashed_messages() %}
+        <div class="flash">{{ message }}</div>
+        {% endfor %}
+    </section>
+    <h1>Recuperación</h1>
+    <form name="restoreForm" method="post" action="{{ url_for('restore_pass') }}">
+        <div>
+            <label for="restoreCorreo">Correo de recuperación</label>
+            <input type="text" id="restoreCorreo" name="restoreCorreo" maxlength="100" />
+        </div>
+        <!-- <div>
+            <label for="restoringCode">Codigo de recuperación</label>
+            <input type="password" name="restoringCode" id="restoringCode" />
+            <img src="{{ url_for('static', filename='images/view.png') }}"
+            onmouseover='showPassword(restoringCode);' onmouseout='hidePassword(restoringCode);' />
+        </div>
+        <div>
+            <label for="newpass">Nueva contraseña</label>
+            <input type="password" name="newpass" id="newpass" />
+            <img src="{{ url_for('static', filename='images/view.png') }}"
+            onmouseover="showPassword('newpass');" onmouseout="hidePassword('newpass');" />
+        </div> -->
+        <input type="submit" value="Enviar" />
+    </form>
+    <div style="text-align: center">
+        <a href="{{ url_for('login') }}">Login</a>
+    </div>
+</body>
+
+</html>

@@ -33,7 +33,7 @@
         Contraseña:
         <input type="password" id="password" name="password" />
         <img src="{{ url_for('static', filename='images/view.png') }}" 
-        onmouseover="showPassword();" onmouseout="hidePassword();" />
+        onmouseover="showPassword('password');" onmouseout="hidePassword('password');" />
       </p>
 
       <p>
@@ -44,5 +44,8 @@
 
       <button type="submit" value="Enviar">Enviar</button>
     </form>
+    <div style="text-align: center">
+      <a href="{{ url_for('login') }}">Login</a>
+    </div>
   </body>
 </html>

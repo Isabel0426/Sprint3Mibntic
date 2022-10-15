@@ -25,16 +25,16 @@ function validar_formulario() {
     }
  }
 
-function showPassword(){
-    let pass1 = document.getElementById("password");
+function showPassword(stringID){
+    let pass1 = document.getElementById(stringID);
     if(pass1.type == "password")
     {
         pass1.type = "text";
     }
 }
 
-function hidePassword(){
-    document.getElementById("password").type = "password";
+function hidePassword(stringID){
+    document.getElementById(stringID).type = "password";
 }
 
 function bigImg(x) {

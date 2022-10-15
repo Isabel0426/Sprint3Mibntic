@@ -38,6 +38,12 @@
             <input type="submit" value="Send" />
         </form>
         <br>
+        <!-- FIXME: Add reference for changing password  -->
+        <div>
+            <a href="{{ url_for('change_pass') }}">Cambiar contraseña</a>
+            |
+            <a href="{{ url_for('login') }}">Logout</a>
+        </div>
         <!-- FIXME: solve message displaying issue  -->
         <div>
             <label for="enviado" style="visibility: hidden"> Mensajes enviados</label visibility=off>
