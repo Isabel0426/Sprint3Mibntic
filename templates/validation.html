@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validation</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+    <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+</head>
+<body>
+    <section class="content">
+        {% for message in get_flashed_messages() %}
+        <div class="flash">{{ message }}</div>
+        {% endfor %}
+    </section>
+    <h1>Validación</h1>
+    <form name="ValidarForm" method="post" action="{{ url_for('validation') }}" >
+        <label for="code">Ingrese el codigo recibido</label>
+        <br>
+        <input type="text" name="code" id="code" />
+        <input type="submit" value="Send" />
+    </form>>
+    <div style="text-align: center">
+        <p>No recibio el correo? Verifique su correo de registro</p>
+        <a href="{{ url_for('register') }}">Registro</a>
+    </div>
+</body>
+</html>
