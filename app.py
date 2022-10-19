@@ -121,14 +121,14 @@ def login():
                 return render_template( 'login.html' )
             else:
                 session["usuario"] = username
-                return render_template( 'send.html')
+                return render_template( 'indexchat.html')
 
         return render_template( 'login.html' )
     except:
         return render_template( 'login.html' )
 
-@app.route( '/send', methods=('GET', 'POST'))
-@app.route( '/send/<string:usuario>', methods=('GET', 'POST'))
+@app.route( '/indexchat', methods=('GET', 'POST'))
+@app.route( '/indexchat/<string:usuario>', methods=('GET', 'POST'))
 def send(usuario=""): #Mocking send message
     if usuario == "":
         try:
@@ -141,11 +141,11 @@ def send(usuario=""): #Mocking send message
         except:
             flash("Sending fail")
         
-        # return render_template('send.html', usuario=usuario)
-        return render_template('send.html')
+        # return render_template('indexchat.html', usuario=usuario)
+        return render_template('indexchat.html')
     else:
         flash("No hay sesion valida iniciada")
-        return render_template('send.html')
+        return render_template('indexchat.html')
 
 @app.route( '/validation', methods=('GET', 'POST'))
 @app.route( '/validation/<string:usuario>', methods=('GET', 'POST'))
