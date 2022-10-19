@@ -54,23 +54,14 @@ def register():
                 flash( error )
                 return render_template( 'register.html' )
 
-            # FIXME Solve hash checking on logging method and hash should be separated
-            # hash = generate_password_hash(password)
-
             # Avoiding user creation without auth
             enable_user_edit(True)
-            update_values_on_edit(name, username, email, password)
-
-
-            # db.executescript(
-            #     "INSERT INTO usuario (nombre, usuario, correo, contraseña) VALUES ('%s','%s','%s','%s')" % (name, username, email, password)
-            # )
-            # db.commit()
+            update_values_on_edit(name, username, email, generate_password_hash(password))
 
             close_db()
 
             sent_code = create_validation_code()
-            correo_electronico=yagmail.SMTP('floresy@uninorte.edu.co','cocodruLLo45') #correo electronico es la variable que almacena el correo y la contraseña
+            correo_electronico=yagmail.SMTP('ymfloresl@unal.edu.co','Lagrange45') #correo electronico es la variable que almacena el correo y la contraseña
             correo_electronico.send(
                 to=email,
                 subject='Plataforma de mensajeria: Validación de correo',
@@ -103,18 +94,21 @@ def login():
                 return render_template( 'login.html' )
 
             user = db.execute(
-                'SELECT * FROM usuario WHERE usuario = ? AND contraseña = ? ', (username, password)
+                'SELECT * FROM usuario WHERE usuario = ?', (username,)
             ).fetchone()
 
             close_db()
-
+            
             if user is None:
-                error = 'Usuario o contraseña inválidos'
-                flash( error )
-                return render_template( 'login.html' )
+                error = 'Usuario no existe'
             else:
-                # return render_template( 'send.html', usuario=username)
-                return render_template( 'send.html')
+                stored_pass = user[4]
+                hash_validation =  check_password_hash(stored_pass, password)
+                if hash_validation is False:
+                    error = 'Contraseña invalida'
+                else:
+                    return render_template( 'send.html' )
+            flash(error)
 
         return render_template( 'login.html' )
     except:
@@ -216,16 +210,20 @@ def change_pass(usuario=""):
                     return render_template( 'change_pass.html')
 
                 user_data = db.execute(
-                    'SELECT * FROM usuario WHERE usuario = ? AND contraseña = ? ', (user, oldpass)
+                    'SELECT * FROM usuario WHERE usuario = ?', (user,)
                 ).fetchone()
 
                 close_db()
 
                 if user_data is None:
-                    message = 'Usuario o contraseña inválidos'
+                    message = 'Usuario no existe'
                 else:
-                    update_password(newpass, user)
-                    message = 'Contraseña modificada'
+                    stored_hash = user_data[4]
+                    validation_result = check_password_hash(stored_hash, oldpass)
+                    if validation_result is True:
+                        hassPass = generate_password_hash(newpass)
+                        update_password(hassPass, user)
+                        message = 'Contraseña modificada'
 
                 flash(message)
                 return render_template('change_pass.html')
@@ -288,7 +286,8 @@ def new_pass(usuario=""):
             if request.method == 'POST':
                 user = get_restoring_user()
                 newpass    = request.form['newpass']
-                update_password(newpass, user)
+                hashpass = generate_password_hash(newpass)
+                update_password(hashpass, user)
                 flash('Contraseña modificada exitosamente')
             return render_template( 'new_pass.html')
         except:
