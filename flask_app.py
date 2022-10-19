@@ -1,7 +1,7 @@
 import os
 
 import yagmail as yagmail
-from flask import Flask, render_template, flash, request, redirect, url_for, jsonify, session
+from flask import Flask, render_template, flash, request, redirect, url_for, session, g
 import utils
 import yagmail
 from db import close_db, get_db, update_password, update_values_on_edit, enable_user_edit, get_db_status, add_validated_user
@@ -14,11 +14,15 @@ validRestoringEmail = False
 
 @app.route( '/' )
 def index():
+    if g.user:
+        return redirect( url_for( 'send' ) )
     return render_template( 'login.html' )
 
 
 @app.route( '/register', methods=('GET', 'POST') )
 def register():
+    if g.user:
+        return redirect( url_for( 'send' ) )
     try:
         if request.method == 'POST':
 
@@ -77,6 +81,8 @@ def register():
 @app.route( '/login', methods=('GET', 'POST') )
 def login():
     try:
+        if g.user:
+            return redirect( url_for( 'send' ) )
         if request.method == 'POST':
             db = get_db()
             error = None
@@ -239,6 +245,8 @@ def change_pass(usuario=""):
 @app.route( '/restore_pass', methods=('GET', 'POST'), )
 def restore_pass():
     global validRestoringEmail
+    if g.user:
+        return redirect( url_for( 'send' ) )
     try:
         if request.method == 'POST':
             correo    = request.form['restoreCorreo']
@@ -285,10 +293,13 @@ def restore_pass():
 @app.route( '/new_pass/<string:usuario>', methods=('GET', 'POST'))
 def new_pass(usuario=""):
     # return render_template( 'new_pass.html', usuario = usuario)
+    if g.user:
+        return redirect( url_for( 'send' ) )
+
     if usuario == "":
         try:
             if request.method == 'POST':
-                user = get_restoring_user()
+                user = get_restoring_user()#TODO Check if user updating should use session user
                 newpass    = request.form['newpass']
                 hashpass = generate_password_hash(newpass)
                 update_password(hashpass, user)
@@ -319,6 +330,18 @@ def set_restoring_user(user):
 
 def get_restoring_user():
     return last_user
+
+@app.before_request
+def load_logged_in_user():
+    user_id = session.get( 'user_id' )
+
+    if user_id is None:
+        g.user = None
+    else:
+        g.user = get_db().execute(
+            'SELECT * FROM usuario WHERE id = ?', (user_id,)
+        ).fetchone()
+        close_db()
 
 @app.route( '/logout' )
 def logout():
