@@ -76,7 +76,7 @@ def register():
             close_db()
 
             sent_code = create_validation_code()
-            correo_electronico=yagmail.SMTP('floresy@uninorte.edu.co','cocodruLLo45') #correo electronico es la variable que almacena el correo y la contraseña
+            correo_electronico=yagmail.SMTP('ymfloresl@unal.edu.co','Lagrange45') #correo electronico es la variable que almacena el correo y la contraseña
             correo_electronico.send(
                 to=email,
                 subject='Plataforma de mensajeria: Validación de correo',
