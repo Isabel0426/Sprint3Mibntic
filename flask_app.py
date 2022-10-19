@@ -1,7 +1,7 @@
 import os
 
 import yagmail as yagmail
-from flask import Flask, render_template, flash, request, redirect, url_for, jsonify
+from flask import Flask, render_template, flash, request, redirect, url_for, jsonify, session
 import utils
 import yagmail
 from db import close_db, get_db, update_password, update_values_on_edit, enable_user_edit, get_db_status, add_validated_user
@@ -101,15 +101,19 @@ def login():
             
             if user is None:
                 error = 'Usuario no existe'
+                flash( error )
+                return render_template( 'login.html' )
             else:
                 stored_pass = user[4]
                 hash_validation =  check_password_hash(stored_pass, password)
                 if hash_validation is False:
-                    error = 'Contraseña invalida'
+                    error = 'Contraseña inválida'
+                    flash( error )
+                    return render_template( 'login.html' )
                 else:
-                    return render_template( 'send.html' )
-            flash(error)
-
+                    session.clear()
+                    session['user_id'] = user[0]
+                    return redirect(url_for( 'send' ))
         return render_template( 'login.html' )
     except:
         return render_template( 'login.html' )
@@ -315,3 +319,8 @@ def set_restoring_user(user):
 
 def get_restoring_user():
     return last_user
+
+@app.route( '/logout' )
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
