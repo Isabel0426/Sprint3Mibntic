@@ -1,4 +1,5 @@
 import os
+import functools
 
 import yagmail as yagmail
 from flask import Flask, render_template, flash, request, redirect, url_for, session, g
@@ -11,6 +12,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask( __name__ )
 app.secret_key = os.urandom( 24 )
 validRestoringEmail = False
+
+def login_required(view):
+    @functools.wraps( view )
+    def wrapped_view(**kwargs):
+        if g.user is None:
+            return redirect( url_for( 'login' ) )
+
+        return view( **kwargs )
+
+    return wrapped_view
 
 @app.route( '/' )
 def index():
@@ -126,6 +137,7 @@ def login():
 
 @app.route( '/send', methods=('GET', 'POST'))
 @app.route( '/send/<string:usuario>', methods=('GET', 'POST'))
+@login_required
 def send(usuario=""): #Mocking send message
     if usuario == "":
         try:
@@ -180,6 +192,7 @@ def validation(usuario=""):
     
 @app.route( '/change_pass', methods=('GET', 'POST'))
 @app.route( '/change_pass/<string:usuario>', methods=('GET', 'POST'))
+@login_required
 def change_pass(usuario=""):
     if usuario!="":
         db = get_db()
@@ -344,6 +357,7 @@ def load_logged_in_user():
         close_db()
 
 @app.route( '/logout' )
+@login_required
 def logout():
     session.clear()
     return redirect(url_for('login'))
